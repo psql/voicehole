@@ -116,12 +116,16 @@ struct OrbVisualizer: View {
                 } else {
                     live = 0
                 }
-                let amp = max(settings.floor, live)
+                // clamp so ripple peaks + variation + glow blur always fit the canvas
+                let amp = min(max(settings.floor, live), 1.05)
                 guard amp > 0.001 else { return }
 
                 let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                let maxRadius = Double(min(size.width, size.height)) * settings.size
+                let halfDim = Double(min(size.width, size.height)) / 2
+                let headroom = (1 + settings.ripple) * (1 + settings.variation) * 1.05
+                let maxRadius = max(10, halfDim - settings.blur - 4) / headroom * (settings.size / 0.5)
                 let ripple = settings.ripple * min(amp * 1.3, 1)   // quiet = calm, loud = warbly
+                let palette = Self.shuffledColors(seed: recorder.paletteSeed)
 
                 context.blendMode = .screen
                 let count = max(1, Int(settings.count.rounded()))
@@ -150,7 +154,7 @@ struct OrbVisualizer: View {
                     }
                     path.closeSubpath()
 
-                    let color = Self.orbColors[k % Self.orbColors.count]
+                    let color = palette[k % palette.count]
                     if settings.glow > 0.01, settings.blur > 0.1 {
                         context.drawLayer { layer in
                             layer.blendMode = .screen
@@ -164,12 +168,30 @@ struct OrbVisualizer: View {
         }
     }
 
+    /// Palette order derives from the recorder's per-recording seed, so every
+    /// new recording gets its own color combination.
+    static func shuffledColors(seed: UInt64) -> [Color] {
+        var generator = SplitMix64(state: seed)
+        return orbColors.shuffled(using: &generator)
+    }
+
     /// Fake voice-ish envelope for tuning without recording.
     static func syntheticLevel(_ t: Double) -> Double {
         let phrase = max(0, sin(t * 0.9))                    // talking bursts
         let syllables = 0.5 + 0.5 * sin(t * 6.3 + sin(t * 2.1) * 2)
         let noise = 0.5 + 0.5 * Perlin.noise(t * 2.2, 0.7, 3.1)
         return min(1.2, phrase * (0.35 + 0.55 * syllables * noise))
+    }
+}
+
+struct SplitMix64: RandomNumberGenerator {
+    var state: UInt64
+    mutating func next() -> UInt64 {
+        state &+= 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        return z ^ (z >> 31)
     }
 }
 

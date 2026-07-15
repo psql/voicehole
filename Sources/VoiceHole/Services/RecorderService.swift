@@ -17,6 +17,8 @@ final class RecorderService: NSObject, ObservableObject {
     /// Spring-smoothed 0…~1.4 input level for the recording visualizer
     /// (fast attack, bouncy overshoot — davinciAudio orb style).
     @Published private(set) var displayLevel: CGFloat = 0
+    /// Reshuffles the orb palette; randomized at the start of each recording.
+    @Published private(set) var paletteSeed: UInt64 = 0x5EED
     @Published private(set) var devices: [InputDevice] = []
     @Published var selectedDeviceID: String? {
         didSet { UserDefaults.standard.set(selectedDeviceID, forKey: "recordDevice") }
@@ -157,6 +159,7 @@ final class RecorderService: NSObject, ObservableObject {
         startedAt = Date()
         springVelocity = 0
         displayLevel = 0
+        paletteSeed = UInt64.random(in: UInt64.min...UInt64.max)
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, let startedAt = self.startedAt else { return }

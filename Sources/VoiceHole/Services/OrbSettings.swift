@@ -15,19 +15,19 @@ final class OrbSettings: ObservableObject {
     }
 
     static let params: [String: Param] = [
-        "count": Param(key: "orb.count", def: 4, range: 1...6, label: "Orb Copies"),
-        "ripple": Param(key: "orb.ripple", def: 0.32, range: 0...0.9, label: "Ripple Depth"),
-        "scale": Param(key: "orb.scale", def: 2.8, range: 0.5...8, label: "Ripple Tightness"),
-        "speed": Param(key: "orb.speed", def: 1.6, range: 0.1...6, label: "Ripple Speed"),
+        "count": Param(key: "orb.count", def: 3, range: 1...6, label: "Orb Copies"),
+        "ripple": Param(key: "orb.ripple", def: 0.303, range: 0...0.9, label: "Ripple Depth"),
+        "scale": Param(key: "orb.scale", def: 3.321, range: 0.5...8, label: "Ripple Tightness"),
+        "speed": Param(key: "orb.speed", def: 3.709, range: 0.1...6, label: "Ripple Speed"),
         "gain": Param(key: "orb.gain", def: 1.0, range: 0.2...3, label: "Input Gain"),
-        "floor": Param(key: "orb.floor", def: 0.07, range: 0...0.4, label: "Silence Floor"),
+        "floor": Param(key: "orb.floor", def: 0.256, range: 0...0.4, label: "Silence Floor"),
         "stiffness": Param(key: "orb.stiffness", def: 0.42, range: 0.05...0.9, label: "Spring Stiffness"),
-        "damping": Param(key: "orb.damping", def: 0.68, range: 0.3...0.95, label: "Spring Damping"),
+        "damping": Param(key: "orb.damping", def: 0.669, range: 0.3...0.95, label: "Spring Damping"),
         "size": Param(key: "orb.size", def: 0.46, range: 0.2...0.6, label: "Orb Size"),
-        "variation": Param(key: "orb.variation", def: 0.22, range: 0...0.6, label: "Copy Variation"),
-        "blur": Param(key: "orb.blur", def: 16, range: 0...40, label: "Glow Blur"),
-        "fill": Param(key: "orb.fill", def: 0.72, range: 0.1...1, label: "Fill Opacity"),
-        "glow": Param(key: "orb.glow", def: 0.55, range: 0...1, label: "Glow Opacity"),
+        "variation": Param(key: "orb.variation", def: 0.184, range: 0...0.6, label: "Copy Variation"),
+        "blur": Param(key: "orb.blur", def: 38.2, range: 0...40, label: "Glow Blur"),
+        "fill": Param(key: "orb.fill", def: 1.0, range: 0.1...1, label: "Fill Opacity"),
+        "glow": Param(key: "orb.glow", def: 0.457, range: 0...1, label: "Glow Opacity"),
     ]
 
     @Published var count: Double { didSet { save("count", count) } }
