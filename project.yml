@@ -34,6 +34,7 @@ targets:
         CFBundleDisplayName: VoiceHole
         LSApplicationCategoryType: public.app-category.productivity
         NSHumanReadableCopyright: ""
+        NSMicrophoneUsageDescription: VoiceHole records voice memos with your microphone. Audio stays on this device.
         CFBundleDocumentTypes:
           - CFBundleTypeName: Audio File
             CFBundleTypeRole: Viewer
@@ -55,12 +56,19 @@ targets:
       - Resources/Assets.xcassets
     dependencies:
       - package: WhisperKit
+      - target: VoiceHoleShare
+    entitlements:
+      path: Support/VoiceHole-iOS.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.altbizney.voicehole
     scheme: {}
     info:
       path: Support/Info-iOS.plist
       properties:
         CFBundleDisplayName: VoiceHole
         UILaunchScreen: {}
+        NSMicrophoneUsageDescription: VoiceHole records voice memos with your microphone. Audio stays on this device.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
         ITSAppUsesNonExemptEncryption: false
@@ -80,3 +88,29 @@ targets:
         PRODUCT_NAME: VoiceHole
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
+
+  VoiceHoleShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Sources/ShareExtension
+    entitlements:
+      path: Support/VoiceHoleShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.altbizney.voicehole
+    info:
+      path: Support/Info-Share.plist
+      properties:
+        CFBundleDisplayName: VoiceHole
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule: SUBQUERY(extensionItems, $extensionItem, SUBQUERY($extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio").@count >= 1).@count >= 1
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.altbizney.voicehole.ios.share
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SKIP_INSTALL: YES

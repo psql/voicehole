@@ -33,8 +33,9 @@ func spiralPoint(theta: CGFloat, phase: CGFloat, rMax: CGFloat, rMin: CGFloat, t
 func drawSpiralArm(phase: CGFloat) {
     let thetaMax: CGFloat = 1.25 * 2 * .pi
     let steps = 340
-    let outerColor = NSColor(calibratedRed: 0.42, green: 0.24, blue: 0.85, alpha: 0.0)
-    let innerColor = NSColor(calibratedRed: 1.0, green: 0.42, blue: 0.78, alpha: 0.95)
+    // Golden Vortex: dark gold sweeping into bright yellow
+    let outerColor = NSColor(calibratedRed: 0.45, green: 0.28, blue: 0.05, alpha: 0.0)
+    let innerColor = NSColor(calibratedRed: 1.0, green: 0.85, blue: 0.25, alpha: 0.95)
 
     for i in 0..<steps {
         let t0 = CGFloat(i) / CGFloat(steps)
@@ -59,6 +60,73 @@ func drawSpiralArm(phase: CGFloat) {
     }
 }
 
+// Deterministic RNG so the icon renders identically every time.
+struct Rand {
+    var seed: UInt64
+    mutating func next() -> CGFloat {
+        seed = seed &* 6364136223846793005 &+ 1442695040888963407
+        return CGFloat((seed >> 33) % 100_000) / 100_000
+    }
+    mutating func range(_ lo: CGFloat, _ hi: CGFloat) -> CGFloat { lo + next() * (hi - lo) }
+}
+
+func drawSparkle(at p: CGPoint, size s: CGFloat, color: NSColor, rotation: CGFloat) {
+    let ctx = NSGraphicsContext.current!.cgContext
+    ctx.saveGState()
+    ctx.translateBy(x: p.x, y: p.y)
+    ctx.rotate(by: rotation)
+
+    func starPath(_ s: CGFloat) -> NSBezierPath {
+        let c = s * 0.14
+        let path = NSBezierPath()
+        path.move(to: CGPoint(x: 0, y: s))
+        path.curve(to: CGPoint(x: s, y: 0), controlPoint1: CGPoint(x: c, y: c), controlPoint2: CGPoint(x: c, y: c))
+        path.curve(to: CGPoint(x: 0, y: -s), controlPoint1: CGPoint(x: c, y: -c), controlPoint2: CGPoint(x: c, y: -c))
+        path.curve(to: CGPoint(x: -s, y: 0), controlPoint1: CGPoint(x: -c, y: -c), controlPoint2: CGPoint(x: -c, y: -c))
+        path.curve(to: CGPoint(x: 0, y: s), controlPoint1: CGPoint(x: -c, y: c), controlPoint2: CGPoint(x: -c, y: c))
+        path.close()
+        return path
+    }
+
+    color.withAlphaComponent(0.25).setFill()
+    starPath(s * 1.7).fill()
+    color.setFill()
+    starPath(s).fill()
+    NSColor.white.withAlphaComponent(0.9).setFill()
+    NSBezierPath(ovalIn: NSRect(x: -s * 0.11, y: -s * 0.11, width: s * 0.22, height: s * 0.22)).fill()
+
+    ctx.restoreGState()
+}
+
+// Big readable twinkles (few + large so they survive 16-32 px sizes).
+func drawStars() {
+    let colors = [
+        NSColor(calibratedRed: 0.72, green: 0.55, blue: 1.0, alpha: 1),   // lavender
+        NSColor(calibratedRed: 0.58, green: 0.32, blue: 0.97, alpha: 1),  // purple
+        NSColor.white,
+    ]
+    var rng = Rand(seed: 44)
+    var placed = 0
+    var attempts = 0
+    while placed < 9 && attempts < 300 {
+        attempts += 1
+        let p = CGPoint(x: rng.range(160, size - 160), y: rng.range(160, size - 160))
+        if hypot(p.x - center.x, p.y - center.y) < 400 { continue }
+        let s = rng.range(30, 56)
+        let color = colors[Int(rng.next() * 100) % colors.count]
+        let rot = rng.next() < 0.45 ? CGFloat.pi / 4 : 0
+        drawSparkle(at: p, size: s, color: color.withAlphaComponent(rng.range(0.75, 1.0)), rotation: rot)
+        placed += 1
+    }
+    for _ in 0..<7 {
+        let p = CGPoint(x: rng.range(150, size - 150), y: rng.range(150, size - 150))
+        if hypot(p.x - center.x, p.y - center.y) < 380 { continue }
+        let r = rng.range(4, 8)
+        colors[Int(rng.next() * 100) % colors.count].withAlphaComponent(rng.range(0.6, 0.95)).setFill()
+        NSBezierPath(ovalIn: NSRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)).fill()
+    }
+}
+
 func drawBlackHole() {
     let hole = NSGradient(colorsAndLocations:
         (NSColor.black, 0.0),
@@ -66,18 +134,18 @@ func drawBlackHole() {
         (NSColor(calibratedRed: 0.08, green: 0.01, blue: 0.12, alpha: 0.85), 0.75),
         (NSColor.black.withAlphaComponent(0.0), 1.0)
     )!
-    hole.draw(fromCenter: center, radius: 0, toCenter: center, radius: 265, options: [])
+    hole.draw(fromCenter: center, radius: 0, toCenter: center, radius: 375, options: [])
 }
 
 // Retro 40s-cartoon "Big Laugh" mouth: thick even lip ring, black mouth-void,
 // teeth band, red blob tongue — flat colors, uniform black monoline.
 func drawLips() {
     let c = center
-    let rx: CGFloat = 205
-    let ry: CGFloat = 205
-    let lip: CGFloat = 74
-    let line: CGFloat = 24
-    let teethH: CGFloat = 92
+    let rx: CGFloat = 292
+    let ry: CGFloat = 292
+    let lip: CGFloat = 102
+    let line: CGFloat = 30
+    let teethH: CGFloat = 126
 
     let lipColor = NSColor(calibratedRed: 0.91, green: 0.30, blue: 0.12, alpha: 1)
     let tongueColor = NSColor(calibratedRed: 0.85, green: 0.18, blue: 0.14, alpha: 1)
@@ -167,6 +235,7 @@ func draw(fullBleed: Bool) {
     for arm in 0..<3 {
         drawSpiralArm(phase: CGFloat(arm) * 2 * .pi / 3)
     }
+    drawStars()
     drawBlackHole()
     drawLips()
 

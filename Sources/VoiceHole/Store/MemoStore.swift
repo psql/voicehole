@@ -53,6 +53,30 @@ final class MemoStore: ObservableObject {
         return memo
     }
 
+    /// Imports audio files dropped into the App Group inbox by the share extension.
+    /// Returns the imported memos, newest first.
+    @discardableResult
+    func processShareInbox() -> [Memo] {
+        guard let container = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.altbizney.voicehole") else { return [] }
+        let inbox = container.appendingPathComponent("Inbox", isDirectory: true)
+        guard let entries = try? FileManager.default.contentsOfDirectory(
+            at: inbox, includingPropertiesForKeys: nil) else { return [] }
+
+        var imported: [Memo] = []
+        for entry in entries {
+            let files = (try? FileManager.default.contentsOfDirectory(
+                at: entry, includingPropertiesForKeys: nil)) ?? [entry]
+            for file in files where !file.lastPathComponent.hasPrefix(".") {
+                if let memo = try? importAudio(from: file) {
+                    imported.append(memo)
+                }
+            }
+            try? FileManager.default.removeItem(at: entry)
+        }
+        return imported
+    }
+
     func rename(id: UUID, to title: String) {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, let i = memos.firstIndex(where: { $0.id == id }) else { return }

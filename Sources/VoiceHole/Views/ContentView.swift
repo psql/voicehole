@@ -4,6 +4,9 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @EnvironmentObject private var store: MemoStore
     @EnvironmentObject private var transcriber: TranscriptionService
+    @EnvironmentObject private var recorder: RecorderService
+
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var selection: UUID?
     @State private var showImporter = false
@@ -16,15 +19,14 @@ struct ContentView: View {
             LibraryView(selection: $selection, showModelSettings: $showModelSettings)
                 .navigationTitle("VoiceHole")
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button {
-                            showImporter = true
-                        } label: {
-                            Label("Import Audio", systemImage: "plus")
-                        }
-                        .help("Import an audio file (⌘I)")
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        recordElapsedLabel
+                        recordButton
+                        deviceMenu
+                        importButton
                     }
                 }
+                .onAppear { recorder.refreshDevices() }
                 #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 240, ideal: 290)
                 #endif
@@ -44,6 +46,13 @@ struct ContentView: View {
                 DropOverlay()
             }
         }
+        .overlay {
+            if recorder.isRecording {
+                RecordingOverlay()
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: recorder.isRecording)
         .fileImporter(
             isPresented: $showImporter,
             allowedContentTypes: [.audio],
@@ -77,9 +86,78 @@ struct ContentView: View {
         } message: {
             Text(transcriber.lastError ?? "")
         }
+        .alert("Recording Error", isPresented: .init(
+            get: { recorder.lastError != nil },
+            set: { if !$0 { recorder.lastError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(recorder.lastError ?? "")
+        }
         .task {
+            recorder.onFinish = { url in
+                importFiles([url])
+                try? FileManager.default.removeItem(at: url)
+            }
+            importFromShareInbox()
             await transcriber.warmIfDownloaded()
         }
+        .onChange(of: scenePhase) {
+            if scenePhase == .active { importFromShareInbox() }
+        }
+    }
+
+    @ViewBuilder
+    private var recordElapsedLabel: some View {
+        if recorder.isRecording {
+            Text(Format.timestamp(recorder.elapsed))
+                .font(.callout.monospacedDigit())
+                .foregroundStyle(.red)
+        }
+    }
+
+    private var recordButton: some View {
+        Button {
+            recorder.toggle()
+        } label: {
+            Label(
+                recorder.isRecording ? "Stop Recording" : "Record",
+                systemImage: recorder.isRecording ? "stop.circle.fill" : "record.circle"
+            )
+            .foregroundStyle(.red)
+        }
+        .help(recorder.isRecording ? "Stop recording" : "Record a new memo (⌘R)")
+        .keyboardShortcut("r", modifiers: .command)
+    }
+
+    private var deviceMenu: some View {
+        Menu {
+            Picker("Input Device", selection: $recorder.selectedDeviceID) {
+                Text("System Default").tag(String?.none)
+                ForEach(recorder.devices) { device in
+                    Text(device.name).tag(String?.some(device.id))
+                }
+            }
+        } label: {
+            Label("Input Device", systemImage: "mic")
+        }
+        .disabled(recorder.isRecording)
+        .help("Choose recording device")
+    }
+
+    private var importButton: some View {
+        Button {
+            showImporter = true
+        } label: {
+            Label("Import Audio", systemImage: "plus")
+        }
+        .help("Import an audio file (⌘I)")
+    }
+
+    private func importFromShareInbox() {
+        let imported = store.processShareInbox()
+        for memo in imported { transcriber.enqueue(memo.id) }
+        if let first = imported.first { selection = first.id }
     }
 
     private func importFiles(_ urls: [URL]) {

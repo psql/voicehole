@@ -4,6 +4,7 @@ import SwiftUI
 struct VoiceHoleApp: App {
     @StateObject private var store: MemoStore
     @StateObject private var transcriber: TranscriptionService
+    @StateObject private var recorder = RecorderService()
 
     init() {
         let store = MemoStore()
@@ -16,6 +17,7 @@ struct VoiceHoleApp: App {
             ContentView()
                 .environmentObject(store)
                 .environmentObject(transcriber)
+                .environmentObject(recorder)
                 #if os(macOS)
                 .frame(minWidth: 760, minHeight: 480)
                 #endif

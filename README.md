@@ -4,7 +4,8 @@ A universal (macOS + iOS) SwiftUI app that transcribes voice memos entirely on-d
 
 ## Features
 
-- **Import** — drag audio files into the window, press ⌘I, drop onto the Dock icon, or share/"Open in" from Voice Memos on iOS.
+- **Record** — ⌘R or the toolbar record button, with a mic-device picker. While recording, a full-screen overlay shows a loudness-reactive Perlin-rippled orb visualizer (silence = gone, loud = large and warbly) with a pulsing REC indicator.
+- **Import** — drag audio files into the window, press ⌘I, drop onto the Dock icon, or share from Voice Memos on iOS (share extension drops files into the App Group inbox; the app imports them on next foreground).
 - **Local transcription** — [WhisperKit](https://github.com/argmaxinc/WhisperKit) running CoreML Whisper models. Audio never leaves the device.
 - **Quick install** — the app ships tiny; Whisper models (Tiny / Base / Small / Large Turbo) download once from the Hugging Face CDN and are cached locally. Switch models in the gear menu at the bottom of the sidebar.
 - **Summary** — generated on-device with Apple Intelligence (Foundation Models) when available, with a local extractive fallback.

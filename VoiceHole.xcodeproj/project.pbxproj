@@ -12,13 +12,18 @@
 		1B773F6BC88DB126FD558CE2 /* MemoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97BC42E0D7ED334075ED8FA2 /* MemoDetailView.swift */; };
 		248E084851D131F880821DD4 /* SummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D32D0C09679BB2C8C432647 /* SummaryService.swift */; };
 		26F86541A5860A9251301918 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7058C0A6BB6D68930224D96 /* Memo.swift */; };
+		2C163B9009DFD75FDC908F85 /* RecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FAA1A5D9610572EA41AD63 /* RecorderService.swift */; };
 		3E4FBEAD9B7E594761742AD9 /* MemoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97BC42E0D7ED334075ED8FA2 /* MemoDetailView.swift */; };
 		42EE3A97DC6C6A6AD0629185 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EAE44D2581CED728F3E5A2F /* WhisperKit */; };
 		443231094969C9A08E5446CE /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EA1223EA9553424E688590 /* TranscriptionService.swift */; };
 		46C7AD6CCEA575DD1DAEFAAB /* ModelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40892AF4DB3C030E5A4C2789 /* ModelSettingsView.swift */; };
 		4D5B02374426DB64634B7E78 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C9EC220078B3B42F6D695BC /* Assets.xcassets */; };
+		5149FDA6EF3C567A8481DBEA /* RecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FAA1A5D9610572EA41AD63 /* RecorderService.swift */; };
 		552493F969ECCDDC11CB2864 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1771D33373EED43D3D4B1B4 /* LibraryView.swift */; };
+		56C62A9ED958F90C4BE4CF23 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931A759A7A6BF385C28DFF5C /* ShareViewController.swift */; };
 		56F1BA6828A16215D4AE1987 /* DocRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAB5995B2F689CEF12A3897 /* DocRenderer.swift */; };
+		57D2D58B1C4A80A4598A0E99 /* RecordingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D738E75B0347F1C70D87252A /* RecordingOverlay.swift */; };
+		5903DFED98DFEEFEA22CDD5C /* VoiceHoleShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 52AB1346AC64B9E5F247A14D /* VoiceHoleShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		66497D68AF745EF655D87884 /* DocFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6DA0C88C69C9FA23255FE10 /* DocFormatter.swift */; };
 		68F618A35AAC306EE87AE542 /* SummaryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D32D0C09679BB2C8C432647 /* SummaryService.swift */; };
 		6FE102AE2872664BC29DEDE4 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 07272346DB9EEDAFB71B9DA2 /* WhisperKit */; };
@@ -35,11 +40,36 @@
 		D688E494AAE62C3BF2D35E1C /* VoiceHoleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41D8FF8ABBFBF2FE3F16605A /* VoiceHoleApp.swift */; };
 		DE7CBE91847491BA9C9F9488 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D01DC4FC096BF766F701C8E /* ContentView.swift */; };
 		DE938BBA024B447026DF1D8D /* TranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54EA1223EA9553424E688590 /* TranscriptionService.swift */; };
+		E227969A7553FB3598E02D1B /* RecordingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D738E75B0347F1C70D87252A /* RecordingOverlay.swift */; };
 		E521A894501B777AC9708DFF /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1771D33373EED43D3D4B1B4 /* LibraryView.swift */; };
 		E5C0699351C21D2538D7EE31 /* VoiceHoleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41D8FF8ABBFBF2FE3F16605A /* VoiceHoleApp.swift */; };
 		F7D69E781EA9066DEDD68DA9 /* DocPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07CB57CB29F37B3EA04A52E3 /* DocPreviewView.swift */; };
 		F920ADF2B34F146D1E7E6CF6 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 237967879C47FB083D5AA88A /* AudioPlayer.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		10CAF284FF0F955AEB9A952F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1CF59BB925941D943A98E749 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D65683DFED23869245406B5;
+			remoteInfo = VoiceHoleShare;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		32FE184C2CC86A23C44F4CDB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5903DFED98DFEEFEA22CDD5C /* VoiceHoleShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		02835BCE564AABAE144D8BAF /* MemoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoStore.swift; sourceTree = "<group>"; };
@@ -49,15 +79,19 @@
 		40892AF4DB3C030E5A4C2789 /* ModelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSettingsView.swift; sourceTree = "<group>"; };
 		41D8FF8ABBFBF2FE3F16605A /* VoiceHoleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceHoleApp.swift; sourceTree = "<group>"; };
 		47A3B1C3A8BE883B531A3E00 /* VoiceHole-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "VoiceHole-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		52AB1346AC64B9E5F247A14D /* VoiceHoleShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = VoiceHoleShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		54EA1223EA9553424E688590 /* TranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionService.swift; sourceTree = "<group>"; };
 		6141A1E69A035D3B1F720373 /* VoiceHole.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VoiceHole.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D01DC4FC096BF766F701C8E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		8D32D0C09679BB2C8C432647 /* SummaryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryService.swift; sourceTree = "<group>"; };
+		931A759A7A6BF385C28DFF5C /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		97BC42E0D7ED334075ED8FA2 /* MemoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoDetailView.swift; sourceTree = "<group>"; };
+		A3FAA1A5D9610572EA41AD63 /* RecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecorderService.swift; sourceTree = "<group>"; };
 		ACAB5995B2F689CEF12A3897 /* DocRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocRenderer.swift; sourceTree = "<group>"; };
 		B1771D33373EED43D3D4B1B4 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		B519572E4C851B312156A5A4 /* Format.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Format.swift; sourceTree = "<group>"; };
 		C7058C0A6BB6D68930224D96 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
+		D738E75B0347F1C70D87252A /* RecordingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingOverlay.swift; sourceTree = "<group>"; };
 		F6DA0C88C69C9FA23255FE10 /* DocFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocFormatter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -89,6 +123,7 @@
 				B1771D33373EED43D3D4B1B4 /* LibraryView.swift */,
 				97BC42E0D7ED334075ED8FA2 /* MemoDetailView.swift */,
 				40892AF4DB3C030E5A4C2789 /* ModelSettingsView.swift */,
+				D738E75B0347F1C70D87252A /* RecordingOverlay.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -109,6 +144,7 @@
 		224A6E699E3BBC897EB66449 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				FFFF9E163E9578A321272C47 /* ShareExtension */,
 				208D467465C6148DD8F7DBAB /* VoiceHole */,
 			);
 			path = Sources;
@@ -128,6 +164,7 @@
 				237967879C47FB083D5AA88A /* AudioPlayer.swift */,
 				F6DA0C88C69C9FA23255FE10 /* DocFormatter.swift */,
 				ACAB5995B2F689CEF12A3897 /* DocRenderer.swift */,
+				A3FAA1A5D9610572EA41AD63 /* RecorderService.swift */,
 				8D32D0C09679BB2C8C432647 /* SummaryService.swift */,
 				54EA1223EA9553424E688590 /* TranscriptionService.swift */,
 			);
@@ -139,6 +176,7 @@
 			children = (
 				47A3B1C3A8BE883B531A3E00 /* VoiceHole-iOS.app */,
 				6141A1E69A035D3B1F720373 /* VoiceHole.app */,
+				52AB1346AC64B9E5F247A14D /* VoiceHoleShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -176,6 +214,14 @@
 			);
 			sourceTree = "<group>";
 		};
+		FFFF9E163E9578A321272C47 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				931A759A7A6BF385C28DFF5C /* ShareViewController.swift */,
+			);
+			path = ShareExtension;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -186,10 +232,12 @@
 				93C153F4E19E229AD7757BF4 /* Sources */,
 				D8DCD5645D706CC850E52C06 /* Resources */,
 				FD3AF003F0D910A26595C392 /* Frameworks */,
+				32FE184C2CC86A23C44F4CDB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F2B6C047BABE62C2373AE622 /* PBXTargetDependency */,
 			);
 			name = "VoiceHole-iOS";
 			packageProductDependencies = (
@@ -219,6 +267,23 @@
 			productReference = 6141A1E69A035D3B1F720373 /* VoiceHole.app */;
 			productType = "com.apple.product-type.application";
 		};
+		9D65683DFED23869245406B5 /* VoiceHoleShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D762938B59CFD16FA91E1609 /* Build configuration list for PBXNativeTarget "VoiceHoleShare" */;
+			buildPhases = (
+				91EFB369CFB7ECCCBE3F57F6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VoiceHoleShare;
+			packageProductDependencies = (
+			);
+			productName = VoiceHoleShare;
+			productReference = 52AB1346AC64B9E5F247A14D /* VoiceHoleShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -233,6 +298,9 @@
 					};
 					46EBBA6A6D66596A10AB994B = {
 						ProvisioningStyle = Manual;
+					};
+					9D65683DFED23869245406B5 = {
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -255,6 +323,7 @@
 			targets = (
 				46EBBA6A6D66596A10AB994B /* VoiceHole */,
 				08AC865A31E9A2D9D97D643D /* VoiceHole-iOS */,
+				9D65683DFED23869245406B5 /* VoiceHoleShare */,
 			);
 		};
 /* End PBXProject section */
@@ -279,6 +348,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		91EFB369CFB7ECCCBE3F57F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				56C62A9ED958F90C4BE4CF23 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		93C153F4E19E229AD7757BF4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -294,6 +371,8 @@
 				1B773F6BC88DB126FD558CE2 /* MemoDetailView.swift in Sources */,
 				C189BE10D8ED13DCDFC13788 /* MemoStore.swift in Sources */,
 				9E740CB0C9FA6018FD4843D4 /* ModelSettingsView.swift in Sources */,
+				2C163B9009DFD75FDC908F85 /* RecorderService.swift in Sources */,
+				E227969A7553FB3598E02D1B /* RecordingOverlay.swift in Sources */,
 				68F618A35AAC306EE87AE542 /* SummaryService.swift in Sources */,
 				443231094969C9A08E5446CE /* TranscriptionService.swift in Sources */,
 				D688E494AAE62C3BF2D35E1C /* VoiceHoleApp.swift in Sources */,
@@ -315,6 +394,8 @@
 				3E4FBEAD9B7E594761742AD9 /* MemoDetailView.swift in Sources */,
 				C1EAD015E9F48CC54A1B6B5A /* MemoStore.swift in Sources */,
 				46C7AD6CCEA575DD1DAEFAAB /* ModelSettingsView.swift in Sources */,
+				5149FDA6EF3C567A8481DBEA /* RecorderService.swift in Sources */,
+				57D2D58B1C4A80A4598A0E99 /* RecordingOverlay.swift in Sources */,
 				248E084851D131F880821DD4 /* SummaryService.swift in Sources */,
 				DE938BBA024B447026DF1D8D /* TranscriptionService.swift in Sources */,
 				E5C0699351C21D2538D7EE31 /* VoiceHoleApp.swift in Sources */,
@@ -323,11 +404,20 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F2B6C047BABE62C2373AE622 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D65683DFED23869245406B5 /* VoiceHoleShare */;
+			targetProxy = 10CAF284FF0F955AEB9A952F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		068FBD1B04A0D0BF7E9496F0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Support/VoiceHole-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = "Support/Info-iOS.plist";
@@ -338,6 +428,24 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.altbizney.voicehole.ios;
 				PRODUCT_NAME = VoiceHole;
 				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3C5F4F8B65B6A0261C03EDB1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/VoiceHoleShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Support/Info-Share.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.altbizney.voicehole.ios.share;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -416,6 +524,24 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.altbizney.voicehole;
 				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8BCC37AB46C37A5C833A6197 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Support/VoiceHoleShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Support/Info-Share.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.altbizney.voicehole.ios.share;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -507,6 +633,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "Support/VoiceHole-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = "Support/Info-iOS.plist";
@@ -547,6 +674,15 @@
 			buildConfigurations = (
 				CEF704EA22A887605BA0EAE9 /* Debug */,
 				068FBD1B04A0D0BF7E9496F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D762938B59CFD16FA91E1609 /* Build configuration list for PBXNativeTarget "VoiceHoleShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BCC37AB46C37A5C833A6197 /* Debug */,
+				3C5F4F8B65B6A0261C03EDB1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
