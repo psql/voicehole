@@ -6,6 +6,9 @@ import SwiftUI
 struct RecordingOverlay: View {
     @EnvironmentObject private var recorder: RecorderService
     @State private var pulsing = false
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
 
     var body: some View {
         ZStack {
@@ -14,7 +17,7 @@ struct RecordingOverlay: View {
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 
-            VStack(spacing: 18) {
+            VStack(spacing: 14) {
                 HStack(spacing: 10) {
                     Circle()
                         .fill(.red)
@@ -27,20 +30,19 @@ struct RecordingOverlay: View {
                 }
 
                 Text(Format.timestamp(recorder.elapsed))
-                    .font(.system(size: 52, weight: .bold))
+                    .font(.system(size: 46, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(.white)
 
+                // flexible: takes whatever height is left, so small windows
+                // shrink the orb instead of clipping the controls
                 OrbVisualizer()
-                    .frame(width: 380, height: 380)
+                    .frame(maxWidth: 460, maxHeight: .infinity)
+                    .frame(minHeight: 120)
 
-                if let device = recorder.devices.first(where: { $0.id == recorder.selectedDeviceID }) {
-                    Label(device.name, systemImage: "mic.fill")
-                        .foregroundStyle(.white.opacity(0.7))
-                } else {
-                    Label("System Default Microphone", systemImage: "mic.fill")
-                        .foregroundStyle(.white.opacity(0.7))
-                }
+                Label(deviceName, systemImage: "mic.fill")
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(1)
 
                 Button {
                     recorder.stop()
@@ -48,54 +50,87 @@ struct RecordingOverlay: View {
                     ZStack {
                         Circle()
                             .fill(.red)
-                            .frame(width: 72, height: 72)
-                        RoundedRectangle(cornerRadius: 6)
+                            .frame(width: 64, height: 64)
+                        RoundedRectangle(cornerRadius: 5)
                             .fill(.white)
-                            .frame(width: 26, height: 26)
+                            .frame(width: 22, height: 22)
                     }
                 }
                 .buttonStyle(.plain)
                 .help("Stop recording")
                 .keyboardShortcut("r", modifiers: .command)
-                .padding(.top, 6)
             }
+            .padding(.vertical, 24)
+            .padding(.horizontal, 16)
         }
+        #if os(macOS)
+        .overlay(alignment: .topTrailing) {
+            Button {
+                openWindow(id: "visualizer-lab")
+            } label: {
+                Label("Tune", systemImage: "slider.horizontal.3")
+                    .foregroundStyle(.white.opacity(0.75))
+            }
+            .buttonStyle(.plain)
+            .padding(14)
+            .help("Open the Visualizer Lab")
+        }
+        #endif
         .onAppear {
             withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
                 pulsing = true
             }
         }
     }
+
+    private var deviceName: String {
+        recorder.devices.first { $0.id == recorder.selectedDeviceID }?.name
+            ?? "System Default Microphone"
+    }
 }
 
 /// Stacked Perlin-rippled orbs whose radius and warble ride the input level.
+/// All aesthetics come from OrbSettings (tunable in the Visualizer Lab).
 struct OrbVisualizer: View {
     @EnvironmentObject private var recorder: RecorderService
+    @ObservedObject private var settings = OrbSettings.shared
 
     private static let orbColors: [Color] = [
         Color(red: 0.62, green: 0.40, blue: 1.00),   // purple
         Color(red: 1.00, green: 0.35, blue: 0.65),   // hot pink
         Color(red: 1.00, green: 0.80, blue: 0.30),   // gold
         Color(red: 0.45, green: 0.55, blue: 1.00),   // violet blue
+        Color(red: 0.30, green: 0.90, blue: 0.80),   // teal
+        Color(red: 1.00, green: 0.55, blue: 0.25),   // orange
     ]
 
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                // small floor so a dot breathes even in silence
-                let amp = Double(max(0.07, recorder.displayLevel))
+                let live: Double
+                if recorder.isRecording {
+                    live = Double(recorder.displayLevel)
+                } else if settings.simulate {
+                    live = Self.syntheticLevel(t)
+                } else {
+                    live = 0
+                }
+                let amp = max(settings.floor, live)
+                guard amp > 0.001 else { return }
+
                 let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                let maxRadius = Double(min(size.width, size.height)) * 0.46
-                let ripple = 0.36 * min(amp * 1.3, 1)   // quiet = calm, loud = warbly
+                let maxRadius = Double(min(size.width, size.height)) * settings.size
+                let ripple = settings.ripple * min(amp * 1.3, 1)   // quiet = calm, loud = warbly
 
                 context.blendMode = .screen
-                for k in 0..<4 {
+                let count = max(1, Int(settings.count.rounded()))
+                for k in 0..<count {
                     let dk = Double(k)
                     let seed = dk * 19.19
-                    let radK = amp * maxRadius * (1 + 0.22 * sin(dk * 2.399))
-                    let scaleK = 1.55 * (1 + 0.3 * sin(dk * 1.7 + 0.8))
-                    let phase = t * (0.55 + 0.15 * dk) + seed
+                    let radK = amp * maxRadius * (1 + settings.variation * sin(dk * 2.399))
+                    let scaleK = settings.scale * (1 + 0.3 * sin(dk * 1.7 + 0.8))
+                    let phase = t * settings.speed * (1 + 0.15 * dk) + seed
 
                     var path = Path()
                     let segments = 150
@@ -115,16 +150,26 @@ struct OrbVisualizer: View {
                     }
                     path.closeSubpath()
 
-                    let color = Self.orbColors[k]
-                    context.drawLayer { layer in
-                        layer.blendMode = .screen
-                        layer.addFilter(.blur(radius: 16))
-                        layer.fill(path, with: .color(color.opacity(0.55)))
+                    let color = Self.orbColors[k % Self.orbColors.count]
+                    if settings.glow > 0.01, settings.blur > 0.1 {
+                        context.drawLayer { layer in
+                            layer.blendMode = .screen
+                            layer.addFilter(.blur(radius: settings.blur))
+                            layer.fill(path, with: .color(color.opacity(settings.glow)))
+                        }
                     }
-                    context.fill(path, with: .color(color.opacity(0.72)))
+                    context.fill(path, with: .color(color.opacity(settings.fill)))
                 }
             }
         }
+    }
+
+    /// Fake voice-ish envelope for tuning without recording.
+    static func syntheticLevel(_ t: Double) -> Double {
+        let phrase = max(0, sin(t * 0.9))                    // talking bursts
+        let syllables = 0.5 + 0.5 * sin(t * 6.3 + sin(t * 2.1) * 2)
+        let noise = 0.5 + 0.5 * Perlin.noise(t * 2.2, 0.7, 3.1)
+        return min(1.2, phrase * (0.35 + 0.55 * syllables * noise))
     }
 }
 

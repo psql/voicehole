@@ -194,9 +194,10 @@ final class RecorderService: NSObject, ObservableObject {
             db = recorder.averagePower(forChannel: 0)
         }
         #endif
-        let target = max(0, min(1, (CGFloat(db) + 55) / 47))
-        springVelocity += (target - displayLevel) * 0.42
-        springVelocity *= 0.68
+        let settings = OrbSettings.shared
+        let target = max(0, min(1.2, (CGFloat(db) + 55) / 47 * settings.gain))
+        springVelocity += (target - displayLevel) * settings.stiffness
+        springVelocity *= settings.damping
         displayLevel = max(0, min(1.4, displayLevel + springVelocity))
     }
 

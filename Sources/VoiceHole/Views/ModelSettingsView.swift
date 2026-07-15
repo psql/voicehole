@@ -3,6 +3,9 @@ import SwiftUI
 struct ModelSettingsView: View {
     @EnvironmentObject private var transcriber: TranscriptionService
     @Environment(\.dismiss) private var dismiss
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -10,6 +13,14 @@ struct ModelSettingsView: View {
                 Text("Whisper Model")
                     .font(.headline)
                 Spacer()
+                #if os(macOS)
+                Button {
+                    dismiss()
+                    openWindow(id: "visualizer-lab")
+                } label: {
+                    Label("Visualizer Lab", systemImage: "slider.horizontal.3")
+                }
+                #endif
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }

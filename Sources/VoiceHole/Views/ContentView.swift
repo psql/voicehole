@@ -194,6 +194,7 @@ struct DropOverlay: View {
 
 struct EmptyStateView: View {
     @EnvironmentObject private var transcriber: TranscriptionService
+    @EnvironmentObject private var recorder: RecorderService
     @Binding var showImporter: Bool
 
     var body: some View {
@@ -201,18 +202,34 @@ struct EmptyStateView: View {
             Image(systemName: "waveform")
                 .font(.system(size: 56))
                 .foregroundStyle(.tint)
-            Text("Drop a voice memo here")
+            Text("Record or drop a voice memo")
                 .font(.title2.weight(.semibold))
-            Text("Drag audio files in, press ⌘I, or share from Voice Memos.\nEverything is transcribed on this device — nothing leaves it.")
+            Text("Hit record, drag audio files in (⌘I), or share from Voice Memos.\nEverything is transcribed on this device — nothing leaves it.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            Button {
-                showImporter = true
-            } label: {
-                Label("Import Audio", systemImage: "square.and.arrow.down")
+
+            HStack(spacing: 12) {
+                Button {
+                    recorder.toggle()
+                } label: {
+                    Label("Record", systemImage: "record.circle.fill")
+                        .font(.title3.weight(.semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+                .controlSize(.large)
+
+                Button {
+                    showImporter = true
+                } label: {
+                    Label("Import Audio", systemImage: "square.and.arrow.down")
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
 
             if transcriber.modelState != .ready {
                 ModelStatusCard()

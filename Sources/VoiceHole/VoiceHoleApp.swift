@@ -33,5 +33,13 @@ struct VoiceHoleApp: App {
             }
         }
         #endif
+
+        #if os(macOS)
+        Window("Visualizer Lab", id: "visualizer-lab") {
+            VisualizerLabView()
+                .environmentObject(recorder)
+        }
+        .defaultSize(width: 520, height: 720)
+        #endif
     }
 }
