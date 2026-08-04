@@ -1,16 +1,20 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct ModelSettingsView: View {
     @EnvironmentObject private var transcriber: TranscriptionService
     @Environment(\.dismiss) private var dismiss
     #if os(macOS)
     @Environment(\.openWindow) private var openWindow
+    @ObservedObject private var meetingSettings = MeetingSettings.shared
     #endif
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Whisper Model")
+                Text("Settings")
                     .font(.headline)
                 Spacer()
                 #if os(macOS)
@@ -29,9 +33,14 @@ struct ModelSettingsView: View {
             Divider()
 
             List {
-                ForEach(WhisperModel.all) { model in
-                    row(for: model)
+                Section("Whisper Model") {
+                    ForEach(WhisperModel.all) { model in
+                        row(for: model)
+                    }
                 }
+                #if os(macOS)
+                meetingsSection
+                #endif
             }
             #if os(macOS)
             .listStyle(.inset)
@@ -53,9 +62,60 @@ struct ModelSettingsView: View {
             .padding()
         }
         #if os(macOS)
-        .frame(width: 480, height: 440)
+        .frame(width: 480, height: 580)
         #endif
     }
+
+    #if os(macOS)
+    private var meetingsSection: some View {
+        Section("Meetings") {
+            Toggle("Detect meetings and suggest recording", isOn: $meetingSettings.detectMeetings)
+                .toggleStyle(.checkbox)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Save meeting recordings to")
+                HStack(spacing: 8) {
+                    Text(recordingsFolderDisplay)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    if !meetingSettings.recordingsPath.isEmpty {
+                        Button("Reset") { meetingSettings.recordingsPath = "" }
+                            .controlSize(.small)
+                    }
+                    Button("Choose…") { chooseRecordingsFolder() }
+                        .controlSize(.small)
+                }
+            }
+            .padding(.vertical, 2)
+
+            Text("Meeting recordings capture system audio plus your mic as Apple Lossless (.m4a) and are also added to the library for transcription.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var recordingsFolderDisplay: String {
+        let path = meetingSettings.recordingsPath.isEmpty
+            ? MeetingSettings.defaultFolderURL.path
+            : meetingSettings.recordingsPath
+        return (path as NSString).abbreviatingWithTildeInPath
+    }
+
+    private func chooseRecordingsFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = "Choose"
+        panel.directoryURL = meetingSettings.recordingsFolderURL
+        if panel.runModal() == .OK, let url = panel.url {
+            meetingSettings.recordingsPath = url.path
+        }
+    }
+    #endif
 
     private func row(for model: WhisperModel) -> some View {
         HStack(spacing: 12) {

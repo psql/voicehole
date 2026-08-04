@@ -12,7 +12,13 @@ final class RecorderService: NSObject, ObservableObject {
         let name: String
     }
 
+    enum Mode {
+        case microphone
+        case meeting   // system audio + mic (macOS only)
+    }
+
     @Published private(set) var isRecording = false
+    @Published private(set) var mode: Mode = .microphone
     @Published private(set) var elapsed: TimeInterval = 0
     /// Spring-smoothed 0…~1.4 input level for the recording visualizer
     /// (fast attack, bouncy overshoot — davinciAudio orb style).
@@ -36,6 +42,8 @@ final class RecorderService: NSObject, ObservableObject {
     #if os(macOS)
     private var session: AVCaptureSession?
     private var fileOutput: AVCaptureAudioFileOutput?
+    private var systemCapture: SystemAudioCapture?
+    private var meetingURL: URL?
     #else
     private var recorder: AVAudioRecorder?
     private var pendingURL: URL?
@@ -73,8 +81,39 @@ final class RecorderService: NSObject, ObservableObject {
         if isRecording { stop() } else { Task { await start() } }
     }
 
+    #if os(macOS)
+    /// Records system audio + the default microphone into Apple Lossless,
+    /// saved to the user-configurable meeting recordings folder.
+    func startMeeting() async {
+        guard !isRecording else { return }
+        let destination = MeetingSettings.shared.recordingsFolderURL
+            .appendingPathComponent(Self.recordingName(prefix: "Meeting"))
+        // System audio records either way; the mic is mixed in when permitted.
+        let micAllowed = await AVCaptureDevice.requestAccess(for: .audio)
+        let capture = SystemAudioCapture()
+        capture.onError = { [weak self] message in
+            Task { @MainActor [weak self] in
+                guard let self, self.mode == .meeting else { return }
+                self.lastError = "System audio capture stopped: \(message)"
+                self.stop()
+            }
+        }
+        do {
+            try await capture.start(writingTo: destination, mixMicrophone: micAllowed)
+            systemCapture = capture
+            meetingURL = destination
+            mode = .meeting
+            beginTiming()
+        } catch {
+            try? FileManager.default.removeItem(at: destination)
+            lastError = "Couldn't record system audio: \(error.localizedDescription)\n\nIf VoiceHole doesn't have permission yet, enable it in System Settings → Privacy & Security → Screen & System Audio Recording, then try again."
+        }
+    }
+    #endif
+
     func start() async {
         guard !isRecording else { return }
+        mode = .microphone
         refreshDevices()
 
         let destination = FileManager.default.temporaryDirectory
@@ -140,7 +179,21 @@ final class RecorderService: NSObject, ObservableObject {
     func stop() {
         guard isRecording else { return }
         #if os(macOS)
-        fileOutput?.stopRecording()
+        switch mode {
+        case .microphone:
+            fileOutput?.stopRecording()
+        case .meeting:
+            guard let capture = systemCapture, let url = meetingURL else { return }
+            systemCapture = nil
+            meetingURL = nil
+            Task { [weak self] in
+                await capture.stop()
+                guard let self else { return }
+                self.endTiming()
+                self.mode = .microphone
+                self.onFinish?(url)
+            }
+        }
         #else
         recorder?.stop()
         recorder = nil
@@ -188,7 +241,9 @@ final class RecorderService: NSObject, ObservableObject {
         guard isRecording else { return }
         var db: Float = -160
         #if os(macOS)
-        if let channel = fileOutput?.connections.first?.audioChannels.first {
+        if mode == .meeting {
+            db = systemCapture?.averagePowerDB ?? -160
+        } else if let channel = fileOutput?.connections.first?.audioChannels.first {
             db = channel.averagePowerLevel
         }
         #else
@@ -204,10 +259,10 @@ final class RecorderService: NSObject, ObservableObject {
         displayLevel = max(0, min(1.4, displayLevel + springVelocity))
     }
 
-    private static func recordingName() -> String {
+    private static func recordingName(prefix: String = "Recording") -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d 'at' h.mm.ss a"
-        return "Recording \(formatter.string(from: Date())).m4a"
+        return "\(prefix) \(formatter.string(from: Date())).m4a"
     }
 }
 

@@ -43,4 +43,5 @@ enum Clipboard {
 
 extension Notification.Name {
     static let voiceholeImport = Notification.Name("voiceholeImport")
+    static let voiceholeRecordMeeting = Notification.Name("voiceholeRecordMeeting")
 }

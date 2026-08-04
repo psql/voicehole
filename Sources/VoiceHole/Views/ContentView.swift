@@ -5,6 +5,9 @@ struct ContentView: View {
     @EnvironmentObject private var store: MemoStore
     @EnvironmentObject private var transcriber: TranscriptionService
     @EnvironmentObject private var recorder: RecorderService
+    #if os(macOS)
+    @ObservedObject private var meetingDetector = MeetingDetector.shared
+    #endif
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -22,6 +25,9 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .primaryAction) {
                         recordElapsedLabel
                         recordButton
+                        #if os(macOS)
+                        recordMeetingButton
+                        #endif
                         deviceMenu
                         importButton
                     }
@@ -52,6 +58,25 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
+        #if os(macOS)
+        .overlay(alignment: .bottom) {
+            if let appName = meetingDetector.meetingApp,
+               !meetingDetector.bannerDismissed,
+               !recorder.isRecording {
+                MeetingBanner(
+                    appName: appName,
+                    onRecord: startMeetingRecording,
+                    onDismiss: { meetingDetector.bannerDismissed = true }
+                )
+                .padding(.bottom, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: meetingDetector.meetingApp)
+        .onReceive(NotificationCenter.default.publisher(for: .voiceholeRecordMeeting)) { _ in
+            startMeetingRecording()
+        }
+        #endif
         .animation(.easeInOut(duration: 0.25), value: recorder.isRecording)
         .fileImporter(
             isPresented: $showImporter,
@@ -97,8 +122,17 @@ struct ContentView: View {
         .task {
             recorder.onFinish = { url in
                 importFiles([url])
-                try? FileManager.default.removeItem(at: url)
+                // Mic memos land in a temp file that's spent after import;
+                // meeting recordings stay in the user's configured folder.
+                if url.path.hasPrefix(FileManager.default.temporaryDirectory.path) {
+                    try? FileManager.default.removeItem(at: url)
+                }
             }
+            #if os(macOS)
+            meetingDetector.isSelfRecording = { [weak recorder] in
+                recorder?.isRecording ?? false
+            }
+            #endif
             importFromShareInbox()
             await transcriber.warmIfDownloaded()
         }
@@ -130,6 +164,25 @@ struct ContentView: View {
         .keyboardShortcut("r", modifiers: .command)
     }
 
+    #if os(macOS)
+    private var recordMeetingButton: some View {
+        Button {
+            startMeetingRecording()
+        } label: {
+            Label("Record Meeting", systemImage: "rectangle.inset.filled.badge.record")
+        }
+        .disabled(recorder.isRecording)
+        .help("Record system audio + mic for meeting notes (⇧⌘R)")
+        .keyboardShortcut("r", modifiers: [.command, .shift])
+    }
+
+    private func startMeetingRecording() {
+        guard !recorder.isRecording else { return }
+        meetingDetector.bannerDismissed = true
+        Task { await recorder.startMeeting() }
+    }
+    #endif
+
     private var deviceMenu: some View {
         Menu {
             Picker("Input Device", selection: $recorder.selectedDeviceID) {
@@ -138,6 +191,14 @@ struct ContentView: View {
                     Text(device.name).tag(String?.some(device.id))
                 }
             }
+            #if os(macOS)
+            Divider()
+            Button {
+                startMeetingRecording()
+            } label: {
+                Label("Record System Audio + Mic", systemImage: "speaker.wave.2.fill")
+            }
+            #endif
         } label: {
             Label("Input Device", systemImage: "mic")
         }
@@ -174,6 +235,46 @@ struct ContentView: View {
         if let id = firstImported { selection = id }
     }
 }
+
+#if os(macOS)
+/// Bottom-of-window suggestion shown while a meeting looks active.
+struct MeetingBanner: View {
+    let appName: String
+    let onRecord: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.2.wave.2.fill")
+                .foregroundStyle(.tint)
+            Text(appName == "your browser"
+                 ? "Looks like you're in a call."
+                 : "Looks like you're in a \(appName) call.")
+                .font(.callout)
+
+            Button(action: onRecord) {
+                Label("Record Meeting", systemImage: "record.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            .controlSize(.small)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Dismiss for this meeting")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().strokeBorder(.separator, lineWidth: 0.5))
+        .shadow(radius: 8, y: 2)
+    }
+}
+#endif
 
 struct DropOverlay: View {
     var body: some View {

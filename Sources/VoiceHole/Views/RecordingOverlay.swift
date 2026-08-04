@@ -40,7 +40,7 @@ struct RecordingOverlay: View {
                     .frame(maxWidth: 460, maxHeight: .infinity)
                     .frame(minHeight: 120)
 
-                Label(deviceName, systemImage: "mic.fill")
+                Label(sourceName, systemImage: sourceIcon)
                     .foregroundStyle(.white.opacity(0.7))
                     .lineLimit(1)
 
@@ -83,9 +83,14 @@ struct RecordingOverlay: View {
         }
     }
 
-    private var deviceName: String {
-        recorder.devices.first { $0.id == recorder.selectedDeviceID }?.name
+    private var sourceName: String {
+        if recorder.mode == .meeting { return "System Audio + Microphone" }
+        return recorder.devices.first { $0.id == recorder.selectedDeviceID }?.name
             ?? "System Default Microphone"
+    }
+
+    private var sourceIcon: String {
+        recorder.mode == .meeting ? "speaker.wave.2.fill" : "mic.fill"
     }
 }
 
