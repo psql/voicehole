@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import os
 
 /// Records new memos from a selectable input device.
 /// macOS: AVCaptureSession + AVCaptureAudioFileOutput (per-device selection).
@@ -20,11 +21,12 @@ final class RecorderService: NSObject, ObservableObject {
     @Published private(set) var isRecording = false
     @Published private(set) var mode: Mode = .microphone
     @Published private(set) var elapsed: TimeInterval = 0
-    /// Spring-smoothed 0…~1.4 input level for the recording visualizer
-    /// (fast attack, bouncy overshoot — davinciAudio orb style).
-    @Published private(set) var displayLevel: CGFloat = 0
-    /// Reshuffles the orb palette; randomized at the start of each recording.
-    @Published private(set) var paletteSeed: UInt64 = 0x5EED
+    /// Recent input levels (0…1, oldest first) for the bar visualizer;
+    /// one sample per meter tick, about the last few seconds.
+    @Published private(set) var levelHistory: [CGFloat] = []
+    static let levelHistoryLength = 120
+    /// Seconds since the input last rose above the silence threshold.
+    @Published private(set) var silenceDuration: TimeInterval = 0
     @Published private(set) var devices: [InputDevice] = []
     @Published var selectedDeviceID: String? {
         didSet { UserDefaults.standard.set(selectedDeviceID, forKey: "recordDevice") }
@@ -34,10 +36,22 @@ final class RecorderService: NSObject, ObservableObject {
     /// Called with the finished recording file; the receiver owns the file.
     var onFinish: ((URL) -> Void)?
 
+    private static let silenceLog = Logger(subsystem: "com.altbizney.voicehole", category: "silence")
     private var timer: Timer?
     private var meterTimer: Timer?
-    private var springVelocity: CGFloat = 0
     private var startedAt: Date?
+    private var lastSoundAt: Date?
+    /// ~130 ms smoothed input power (linear), so single noisy samples don't
+    /// register as sound.
+    private var smoothedPower: Float = 0
+    /// Per-second average smoothed level (dB), newest last; the quietest
+    /// second in the window is the current noise floor.
+    private var floorBuckets: [Float] = []
+    private var floorBucketSecond: Int = -1
+    private var bucketSum: Float = 0
+    private var bucketCount: Int = 0
+    /// When set, the finished file is cut to this many seconds before hand-off.
+    private var pendingTrimEnd: TimeInterval?
 
     #if os(macOS)
     private var session: AVCaptureSession?
@@ -191,7 +205,7 @@ final class RecorderService: NSObject, ObservableObject {
                 guard let self else { return }
                 self.endTiming()
                 self.mode = .microphone
-                self.onFinish?(url)
+                self.finish(url)
             }
         }
         #else
@@ -201,18 +215,46 @@ final class RecorderService: NSObject, ObservableObject {
         endTiming()
         if let url = pendingURL {
             pendingURL = nil
-            onFinish?(url)
+            finish(url)
         }
         #endif
+    }
+
+    /// Stops because nothing has been heard for the configured timeout; the
+    /// saved file is trimmed to end shortly after the last sound.
+    private func stopForSilence() {
+        guard isRecording, let startedAt, let lastSoundAt else { return }
+        pendingTrimEnd = lastSoundAt.timeIntervalSince(startedAt) + RecordingSettings.trimTail
+        stop()
+    }
+
+    /// Applies any pending silence trim, then hands the file to `onFinish`.
+    private func finish(_ url: URL) {
+        let trimEnd = pendingTrimEnd
+        pendingTrimEnd = nil
+        guard let trimEnd else {
+            onFinish?(url)
+            return
+        }
+        Task { [weak self] in
+            await AudioTrimmer.trim(url, to: trimEnd)
+            self?.onFinish?(url)
+        }
     }
 
     private func beginTiming() {
         isRecording = true
         elapsed = 0
         startedAt = Date()
-        springVelocity = 0
-        displayLevel = 0
-        paletteSeed = UInt64.random(in: UInt64.min...UInt64.max)
+        lastSoundAt = startedAt
+        silenceDuration = 0
+        smoothedPower = 0
+        floorBuckets = []
+        floorBucketSecond = -1
+        bucketSum = 0
+        bucketCount = 0
+        pendingTrimEnd = nil
+        levelHistory = []
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, let startedAt = self.startedAt else { return }
@@ -231,12 +273,13 @@ final class RecorderService: NSObject, ObservableObject {
         meterTimer?.invalidate()
         meterTimer = nil
         startedAt = nil
-        displayLevel = 0
-        springVelocity = 0
+        lastSoundAt = nil
+        silenceDuration = 0
+        levelHistory = []
     }
 
-    /// Reads the current input power and integrates a bouncy spring toward it,
-    /// mirroring the fast-attack "Springy" behavior of the davinciAudio orb.
+    /// Reads the current input power, appends it to the visualizer history,
+    /// and feeds the silence detector.
     private func tickMeter() {
         guard isRecording else { return }
         var db: Float = -160
@@ -252,11 +295,60 @@ final class RecorderService: NSObject, ObservableObject {
             db = recorder.averagePower(forChannel: 0)
         }
         #endif
-        let settings = OrbSettings.shared
-        let target = max(0, min(1.2, (CGFloat(db) + 55) / 47 * settings.gain))
-        springVelocity += (target - displayLevel) * settings.stiffness
-        springVelocity *= settings.damping
-        displayLevel = max(0, min(1.4, displayLevel + springVelocity))
+        // -55 dB (room tone) → 0, -8 dB (shouting) → 1; fast attack, gentle decay.
+        let instant = max(0, min(1, (CGFloat(db) + 55) / 47))
+        let previous = levelHistory.last ?? 0
+        let level = max(instant, previous * 0.82)
+        levelHistory.append(level)
+        if levelHistory.count > Self.levelHistoryLength {
+            levelHistory.removeFirst(levelHistory.count - Self.levelHistoryLength)
+        }
+        trackSilence(db: db)
+    }
+
+    /// Notes when sound was last heard and auto-stops once the configured
+    /// stretch of silence has passed. "Sound" is anything well above the
+    /// rolling noise floor, so room tone and mic hiss never reset the timer.
+    private func trackSilence(db: Float) {
+        let now = Date()
+        guard let startedAt else { return }
+
+        let power = pow(10, max(db, -160) / 10)
+        smoothedPower += (power - smoothedPower) * 0.25
+        let level = 10 * log10(max(smoothedPower, 1e-16))
+
+        let second = Int(now.timeIntervalSince(startedAt))
+        if second != floorBucketSecond {
+            if bucketCount > 0 {
+                floorBuckets.append(bucketSum / Float(bucketCount))
+                if floorBuckets.count > RecordingSettings.noiseFloorWindow {
+                    floorBuckets.removeFirst(floorBuckets.count - RecordingSettings.noiseFloorWindow)
+                }
+                Self.silenceLog.debug("t=\(second) level=\(level, format: .fixed(precision: 1)) secAvg=\(self.floorBuckets.last ?? 0, format: .fixed(precision: 1)) floor=\(self.floorBuckets.min() ?? 0, format: .fixed(precision: 1)) silence=\(self.silenceDuration, format: .fixed(precision: 0))")
+            }
+            floorBucketSecond = second
+            bucketSum = 0
+            bucketCount = 0
+        }
+        bucketSum += level
+        bucketCount += 1
+        // Until a full second has been averaged, treat the current level as the floor.
+        let noiseFloor = floorBuckets.min() ?? level
+        let threshold = max(noiseFloor + RecordingSettings.silenceMarginDB,
+                            RecordingSettings.silenceAbsoluteFloorDB)
+        if level > threshold {
+            lastSoundAt = now
+        }
+        guard let lastSoundAt else { return }
+        let silence = now.timeIntervalSince(lastSoundAt)
+        // Whole-second granularity keeps the overlay countdown from re-rendering 30×/s.
+        if silence.rounded(.down) != silenceDuration.rounded(.down) || silence < silenceDuration {
+            silenceDuration = silence
+        }
+        let timeout = RecordingSettings.shared.silenceTimeout
+        if timeout > 0, silence >= timeout {
+            stopForSilence()
+        }
     }
 
     private static func recordingName(prefix: String = "Recording") -> String {
@@ -281,9 +373,10 @@ extension RecorderService: AVCaptureFileOutputRecordingDelegate {
             self.fileOutput = nil
             self.endTiming()
             if let error {
+                self.pendingTrimEnd = nil
                 self.lastError = "Recording failed: \(error.localizedDescription)"
             } else {
-                self.onFinish?(outputFileURL)
+                self.finish(outputFileURL)
             }
         }
     }

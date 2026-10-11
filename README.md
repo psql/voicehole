@@ -4,7 +4,8 @@ A universal (macOS + iOS) SwiftUI app that transcribes voice memos entirely on-d
 
 ## Features
 
-- **Record** — ⌘R or the toolbar record button, with a mic-device picker. While recording, a full-screen overlay shows a loudness-reactive Perlin-rippled orb visualizer (silence = gone, loud = large and warbly) with a pulsing REC indicator.
+- **Record** — ⌘R or the toolbar record button, with a mic-device picker. While recording, a full-screen overlay shows a scrolling rounded-bar level visualizer with a pulsing REC indicator.
+- **Auto-stop on silence** — if nothing is heard for a while (default 2 minutes; gear menu → Recording to change or turn off), the recording ends on its own and the silent tail is trimmed off the saved memo. The overlay shows a countdown once a pause gets long. Applies to mic memos and meeting recordings.
 - **Meeting recording (macOS)** — ⇧⌘R or the meeting button records system audio + your mic together, so calls become meeting notes. Saved as Apple Lossless (ALAC) mono `.m4a` into a configurable folder (gear menu → Meetings, default `~/Documents/VoiceHole Meetings`) and imported into the library for transcription. With "Detect meetings" checked (also in the gear menu), VoiceHole watches for a call app (Zoom, Teams, FaceTime, Webex, Slack, Discord, Chime, or a browser) using the mic and suggests recording via a notification with a Record button, plus an in-app banner. Needs Screen Recording permission the first time (System Settings → Privacy & Security).
 - **Import** — drag audio files into the window, press ⌘I, drop onto the Dock icon, or share from Voice Memos on iOS (share extension drops files into the App Group inbox; the app imports them on next foreground).
 - **Local transcription** — [WhisperKit](https://github.com/argmaxinc/WhisperKit) running CoreML Whisper models. Audio never leaves the device.

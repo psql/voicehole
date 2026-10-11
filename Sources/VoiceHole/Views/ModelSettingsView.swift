@@ -6,8 +6,8 @@ import AppKit
 struct ModelSettingsView: View {
     @EnvironmentObject private var transcriber: TranscriptionService
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var recordingSettings = RecordingSettings.shared
     #if os(macOS)
-    @Environment(\.openWindow) private var openWindow
     @ObservedObject private var meetingSettings = MeetingSettings.shared
     #endif
 
@@ -17,14 +17,6 @@ struct ModelSettingsView: View {
                 Text("Settings")
                     .font(.headline)
                 Spacer()
-                #if os(macOS)
-                Button {
-                    dismiss()
-                    openWindow(id: "visualizer-lab")
-                } label: {
-                    Label("Visualizer Lab", systemImage: "slider.horizontal.3")
-                }
-                #endif
                 Button("Done") { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }
@@ -38,6 +30,7 @@ struct ModelSettingsView: View {
                         row(for: model)
                     }
                 }
+                recordingSection
                 #if os(macOS)
                 meetingsSection
                 #endif
@@ -64,6 +57,19 @@ struct ModelSettingsView: View {
         #if os(macOS)
         .frame(width: 480, height: 580)
         #endif
+    }
+
+    private var recordingSection: some View {
+        Section("Recording") {
+            Picker("Stop after silence", selection: $recordingSettings.silenceTimeout) {
+                ForEach(RecordingSettings.silenceTimeoutOptions, id: \.seconds) { option in
+                    Text(option.label).tag(option.seconds)
+                }
+            }
+            Text("If nothing is heard for this long, the recording ends on its own and the silent tail is trimmed off the memo. Applies to mic memos and meeting recordings.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 
     #if os(macOS)
