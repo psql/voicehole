@@ -44,8 +44,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.altbizney.voicehole
-        CODE_SIGN_STYLE: Manual
-        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: HFYS9XNM5B
         ENABLE_HARDENED_RUNTIME: NO
 
   VoiceHole-iOS:
@@ -71,9 +72,12 @@ targets:
         NSMicrophoneUsageDescription: VoiceHole records voice memos with your microphone. Audio stays on this device.
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        UIBackgroundModes:
+          - audio
         ITSAppUsesNonExemptEncryption: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         CFBundleDocumentTypes:
@@ -87,6 +91,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.altbizney.voicehole.ios
         PRODUCT_NAME: VoiceHole
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HFYS9XNM5B
         TARGETED_DEVICE_FAMILY: "1,2"
 
   VoiceHoleShare:
@@ -112,5 +117,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.altbizney.voicehole.ios.share
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: HFYS9XNM5B
         TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES

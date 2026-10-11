@@ -127,18 +127,40 @@ struct MemoDetailView: View {
     // MARK: - Controls
 
     private func controls(_ memo: Memo) -> some View {
-        HStack {
-            Picker("View", selection: $tab) {
-                ForEach(DocTab.allCases) { t in
-                    Text(t.rawValue).tag(t)
-                }
+        #if os(iOS)
+        // Phones are too narrow for the picker and the actions on one line.
+        VStack(spacing: 10) {
+            tabPicker
+            HStack {
+                actions(memo)
+                Spacer()
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 340)
-
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        #else
+        HStack {
+            tabPicker.frame(maxWidth: 340)
             Spacer()
+            actions(memo)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        #endif
+    }
 
+    private var tabPicker: some View {
+        Picker("View", selection: $tab) {
+            ForEach(DocTab.allCases) { t in
+                Text(t.rawValue).tag(t)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+    }
+
+    @ViewBuilder
+    private func actions(_ memo: Memo) -> some View {
             Menu {
                 Button("Copy Transcript") { Clipboard.copy(DocFormatter.plainTranscript(for: memo)) }
                     .disabled(!memo.isTranscribed)
@@ -164,9 +186,6 @@ struct MemoDetailView: View {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
     }
 
     private func currentTabText(_ memo: Memo) -> String? {
