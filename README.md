@@ -2,6 +2,8 @@
 
 A universal (macOS + iOS) SwiftUI app that transcribes voice memos entirely on-device with Whisper.
 
+**[Download for Mac](https://github.com/psql/voicehole/releases/latest/download/VoiceHole-mac.zip)** (macOS 14 or later, Apple silicon and Intel, signed and notarized). iPhone version coming soon.
+
 ## Features
 
 - **Record** — ⌘R or the toolbar record button, with a mic-device picker. While recording, a full-screen overlay shows a scrolling rounded-bar level visualizer with a pulsing REC indicator.
@@ -28,7 +30,13 @@ open VoiceHole.xcodeproj   # select the VoiceHole-iOS scheme and run
 
 Both targets share all sources under `Sources/VoiceHole`. The app icon is rendered by `scripts/genicon.swift`.
 
+To cut a Mac release, bump `MARKETING_VERSION` in `project.yml` and run `scripts/release-mac.sh`. It archives with Developer ID, notarizes, and attaches `VoiceHole-mac.zip` to a new GitHub release (`--no-upload` stops after the zip).
+
 ## Storage
 
 - macOS: `~/Library/Application Support/VoiceHole/` (audio in `Memos/`, index in `memos.json`, models in `Models/`)
 - iOS: app Documents directory (file-sharing enabled)
+
+## License
+
+MIT. See [LICENSE](LICENSE).
