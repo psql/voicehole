@@ -121,7 +121,11 @@ if [[ $UPLOAD == 0 ]]; then
 fi
 
 echo "▸ publishing $TAG"
-gh release create "$TAG" "$ZIP" --repo "$REPO" \
+# gh can't always create the tag itself (it fails with a misleading "workflow
+# scope" error), so tag and push first.
+git tag "$TAG"
+git push -q origin "$TAG"
+gh release create "$TAG" "$ZIP" --repo "$REPO" --verify-tag \
   --title "VoiceHole $VERSION for Mac" \
   --notes "Unzip, then drag VoiceHole to Applications. Needs macOS 14 or later, on Apple Silicon or Intel. Signed and notarized by Apple."
 echo "✓ https://github.com/$REPO/releases/tag/$TAG"
