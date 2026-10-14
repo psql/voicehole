@@ -7,6 +7,7 @@ struct ModelSettingsView: View {
     @EnvironmentObject private var transcriber: TranscriptionService
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var recordingSettings = RecordingSettings.shared
+    @State private var copiedWallet = false
     #if os(macOS)
     @ObservedObject private var meetingSettings = MeetingSettings.shared
     #endif
@@ -34,6 +35,7 @@ struct ModelSettingsView: View {
                 #if os(macOS)
                 meetingsSection
                 #endif
+                supportSection
             }
             #if os(macOS)
             .listStyle(.inset)
@@ -69,6 +71,49 @@ struct ModelSettingsView: View {
             Text("If nothing is heard for this long, the recording ends on its own and the silent tail is trimmed off the memo. Applies to mic memos and meeting recordings.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var supportSection: some View {
+        Section("Support this project") {
+            HStack(alignment: .top, spacing: 12) {
+                Image("BiscottiFace")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 44, height: 44)
+                    .clipShape(Circle())
+                    .accessibilityLabel("Biscotti")
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Toss a treat to the dog.")
+                        .font(.body.weight(.semibold))
+                    Text("VoiceHole is a production tool used to build Biscotti the robot dog. Send him crypto; every treat goes to doing good.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 8) {
+                        Button {
+                            Clipboard.copy("biscotti.eth")
+                            copiedWallet = true
+                            Task {
+                                try? await Task.sleep(for: .seconds(1.5))
+                                copiedWallet = false
+                            }
+                        } label: {
+                            Text(copiedWallet ? "Copied!" : "biscotti.eth")
+                                .font(.caption.monospaced())
+                        }
+                        .controlSize(.small)
+                        .help("Copy biscotti.eth")
+                        Link("Open wallet", destination: URL(string: "https://playbiscotti.com/wallet")!)
+                            .font(.caption)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+
+            Link("Sponsor on GitHub", destination: URL(string: "https://github.com/sponsors/altbizney")!)
+                .font(.callout)
         }
     }
 
