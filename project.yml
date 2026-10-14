@@ -31,6 +31,8 @@ targets:
     info:
       path: Support/Info-macOS.plist
       properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDisplayName: VoiceHole
         LSApplicationCategoryType: public.app-category.productivity
         NSHumanReadableCopyright: ""
@@ -67,6 +69,8 @@ targets:
     info:
       path: Support/Info-iOS.plist
       properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDisplayName: VoiceHole
         UILaunchScreen: {}
         NSMicrophoneUsageDescription: VoiceHole records voice memos with your microphone. Audio stays on this device.
@@ -107,6 +111,8 @@ targets:
     info:
       path: Support/Info-Share.plist
       properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDisplayName: VoiceHole
         NSExtension:
           NSExtensionPointIdentifier: com.apple.share-services
